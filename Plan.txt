@@ -1,0 +1,137 @@
+Important stuff the bot will consider, the rest wil just be stored and skiped:
+Mentees:
+1. [Contact information] (Information)
+2. English Level (Selective Process)
+3. Time zone (Information)
+4. Availability (Selective Process / Pairing)
+5. Gender (Pairing)
+6. Language to learn (Pairing)
+7. Level (Pairing)
+
+Mentors:
+1. [Contact information] (Information)
+2. English Level (Selective Process)
+3. Time zone (Information)
+4. Availability (Selective Process / Pairing)
+5. Language to teach (Pairing)
+6. Is a native Speaker? (Pairing:preference)
+
+How will the bot auto-reject:
+0. Every 10 minutes:
+1. Update the database of applicants and get the index of where to start checking
+2. For all mentors and mentees check this conditions
+2.1. Over 13
+2.2. Do they have B2 English proficiency or above?
+2.3. Is their availability time al least [idk] hours a week?
+2.4. Is their paragraph's score equal or more than [idk] points? 
+
+3. Send the applicant's data to the "Selective Process Result" spreadsheet.
+3.1. "Selective Process Result - Mentors Accepted" - and wait
+3.2. "Selective Process Result - Mentors Rejected" - and sent them an email of rejection
+3.3. "Selective Process Result - Mentees Accepted" - and wait
+3.4. "Selective Process Result - Mentees Rejected" - and sent them an email of rejection
+
+How will the bot pair:
+0. Copy "Selective Process Result - Mentors Accepted" and "Selective Process Result - Mentees Accepted" into CSVs inside the bot.
+1. Get all the pre-accepted members in a list.
+1.1. For mentors create new Mentor objects and give it attributes of the spreadsheet
+1.2. For mentees create new Mentee objects and give it attributes of the spreadsheet
+
+2. Change everyones availability into GMT +0
+
+3. Make the groups / Pairing section
+3.0. Until there's no more people to pair: //Every *.0. means the context of the block
+3.1. Get a list of all the different languages
+3.2. Get the number of mentees per language
+
+3.3.0. For every language in list, [alphabetically] //This is not efficient, MUST CHANGE
+3.3.1. Get the specific data of the language
+3.3.1.1. Get all mentors with that language in "to teach".
+3.3.1.2. Get all the mentees with that language as "first option"
+3.3.1.3. Match all of their schedules and store the number
+
+//At this point, we have input the data to the bot, the it has read the information and do the operations with it
+
+3.3.2. Count the number of mentees, mentors and languages to check if everyone fits.
+3.3.2.1. If there are more levels than mentors, reject full levels with the fewest total matches
+
+3.3.2.2. If there are more mentors than mentees, reject mentors based on:
+////////////////////////////////////////////////////////////////////
+3.3.2.2.0. The rejection mechanism is:
+3.3.2.2.0.a. Check if the mentor still have more languages to choose
+3.3.2.2.0.b. If (s)he does, delete the current language from his/her list and send them back to the pre-selected spreadsheet
+3.3.2.2.0.c. If they doesn't, send him/her to the rejected spreadsheet
+//////////////////////////////////////////////////////////////////
+3.3.2.2.1. The ones with the fewest matches.
+3.3.2.2.2. If there's a tie, break it giving preference to the one who:
+3.3.2.2.2.1. is a native speaker
+3.3.2.2.2.2. have a language certificade
+3.3.2.2.2.3. have experience teaching
+3.3.2.2.2.4. have already been in the project before
+3.3.2.2.2.5. If there's still a tie, skip this languge and mark it as manual revision
+
+//"a" is maximun number of mentees per mentor, so 3.
+3.3.2.3. If there are more mentees than "a" times mentors, reject mentees based on:
+////////////////////////////////////////////////////////////////////
+3.3.2.3.0. The rejection mechanism is:
+3.3.2.3.0.a. Check if the mentee still have more languages to choose
+3.3.2.3.0.b. If (s)he does, delete the current language from his/her list and send them back to the pre-selected spreadsheet
+3.3.2.3.0.c. If (s)he doesn't, send him/her to the rejected spreadsheet
+//////////////////////////////////////////////////////////////////
+3.3.2.3.1. The ones with the fewest matches.
+3.3.2.3.2. If there's a tie, break it giving preference to the one who:
+3.3.2.3.2.1. have a greater paragraph score
+3.3.2.3.2.2. was in the previous cycle
+3.3.2.3.3. If there's still a tie
+3.3.2.3.3.1. Export a message "Manual revision for mentees"
+
+//At this point, we have taken down all the extra people according to the basic rules:
+//<= means less or equal to
+// #levels <= #mentors <= #mentees <= #mentors * a           or
+// #levels <= #mentors <= #mentees <= #mentors * 3
+
+3.3.3. Calculate how many groups are going to be created
+3.3.3.1. The groups needed for each level is calculated by: ceil(n/3) where "n" is the number of mentees for that level
+//The last line determines the minimum numbers of groups that are going to be created based on the number of mentees per level selecting them in groups of 3.
+//The minimum number of groups can also be understood as the minimum number of mentor requiered, since the number of groups is equal to the number of mentors.
+
+//If we needed more groups, some of them shall be shut down
+3.3.3.2. If the number of groups is greater than the #mentors we have for the language
+3.3.3.2.0. Repeat until the condition for 4.3.3 is true.
+3.3.3.2.1. Search for the last level that requieres the most amount of mentors
+3.3.3.2.1. From that level, sort the mentees by availability and reject (#mentees%3).
+3.3.3.2.2. If there was a tie, follow the steps of 4.2.3.
+// At this point, the total of mentors needed should've been reduced by 1, and may repeat
+
+//If we have a fair amount then we can start assigning the mentors to the levels before creating the groups
+3.3.3.3. If the total of mentors needed is equal to the #mentors we have for the language
+3.3.3.3.1. Get the total matches of every mentor for every language
+3.3.3.3.2. Starting by the level with the lowest total availability
+3.3.3.3.3. Pair each level with the mentors who have the highest matches with the current level
+
+3.3.3.4. If the total of mentors needed is less than the #mentors we have for the language
+//3.3.3.4. Means that there will be groups with less than 3 mentees, which is great for the mentors but bad for the bot. How should the bot decide which level shoud have groups with less than 3 mentees? [WORKING...]
+
+//At this point, the mentors should have been assigned to specific levels
+
+3.3.4. Now let's pair mentors and mentees
+3.3.4.0. Repeat for each level of the language, in alphabetical order
+3.3.4.1. Sort the mentees of the level by the one with the least total matches first
+3.3.4.2. Get the ceil function of the avarage mentees a mentor can have for that level
+3.3.4.3. Actual pairing:
+3.3.4.3.0. For every mentee in the level
+3.3.4.3.1. Pick the mentor who have the highest matches with him/her.
+3.3.4.3.1.1. If after this pairing, the mentor reaches the output of 4.4.2., take down the mentor from the list.
+3.3.4.4. All the pairings shall be stored in a dataframe.
+
+//At this point, we have a DataFrame of 3 columns: 1 for the level, another for the mentees and the final other one for the mentors who they have been paired with.
+
+3.3.5. Export the Dataframe to a sheet in a spreadsheet "Groups - [Name of the language]"
+
+//At this point, we have a spreadsheet with different sheets for every languages that contain all the groups
+
+ALGORITHM CHANGE SUGGESTIONS:
+1. Stop taking in consideration the order of "language priority" for both, mentees and mentors, so the bot can pick their language priority based in ours.
+2. Find where to add the "preferences" bc I couldn't find a place for those without fking up the rest of the algorithm.
+3. Get a therapist
+4. Make the bot copy all the contact information of the applicants into the final spreadsheets

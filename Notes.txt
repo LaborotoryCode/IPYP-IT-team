@@ -1,0 +1,13 @@
+#Err List(a,b,c)
+  a = nMentees <= 5 * nMentors
+  b = nMentors <= nMentees
+  c = nLevels <= nMentors
+
+  #4 Too many levels (1,1,0)
+  #3 Too many mentors (1,0,1)
+  #2 Too many mentees (0,1,1)
+  #1 Too many levels and  mentees (0,1,0)
+  #0 Everything is fine so far (1,1,1)
+
+
+Prefer natives for ties!!!!!
